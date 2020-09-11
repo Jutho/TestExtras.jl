@@ -109,3 +109,10 @@ julia> @constinferred mysqrt(-3.)
 julia> @constinferred mysqrt(x; complex = false)
 1.7320508075688772
 ```
+Note, firstly, that the case where `@constinferred` detects that the return type cannot be
+inferred for a general argument of type `Float64`, it reports the error as an actual test
+failure rather than a generic error. Secondly, note that while the `@constinferred` macro
+seems to work for all versions of Julia from version 1 onwards, the result can depend on
+the specific Julia version, as changes in the compiler affect constant propagation. In
+particular, the constant propagation for the keyword argument in the last test only leads
+to an inferred return type on Julia 1.5 (and beyond?).
