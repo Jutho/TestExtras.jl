@@ -1,0 +1,13 @@
+name = "TestExtras"
+uuid = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
+authors = ["Jutho Haegeman <jutho.haegeman@ugent.be> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
