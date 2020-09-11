@@ -1,10 +1,27 @@
 module TimedTests
-export TimedTestSet
+export @timedtestset
 
 import Test
 import Test: AbstractTestSet, DefaultTestSet, Broken, Fail, Error, Pass, TestSetException
 import Test: record, finish, print_test_errors, print_test_results, print_counts, myid,
             get_testset, get_testset_depth,get_test_counts, get_alignment, filter_errors
+
+
+macro timedtestset(ex...)
+    if length(ex) == 2
+        name = ex[1]
+        testset = ex[2]
+    else
+        name = "timed test set"
+        testset = ex[1]
+    end
+    timedtestsetvar = gensym()
+    # for some reason, you cannot do @testset TestExtras.TimedTests.TimedTestSet begin ...
+    # instead we do: var = TestExtras.TimedTests.TimedTestSet; @testset var begin ...
+    return esc(Expr(:block,
+    Expr(:(=), timedtestsetvar, :($TimedTestSet)),
+    Expr(:macrocall, Symbol("@testset"), __source__, timedtestsetvar, name, testset)))
+end
 
 @nospecialize
 
@@ -164,7 +181,6 @@ function get_alignment(ts::TimedTestSet, depth::Int)
     child_widths = map(t->get_alignment(t, depth+1), ts.results)
     return max(ts_width, maximum(child_widths))
 end
-get_alignment(ts, depth::Int) = 0
 
 # Recursive function that fetches backtraces for any and all errors
 # or failures the testset and its children encountered
