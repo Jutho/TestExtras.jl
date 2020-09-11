@@ -61,9 +61,6 @@ mysqrt (generic function with 1 method)
 julia> x = 3.
 3.0
 
-julia> @inferred sqrt(x)
-1.7320508075688772
-
 julia> @inferred mysqrt(x)
 ERROR: return type Float64 does not match inferred return type Union{Complex{Float64}, Float64}
 Stacktrace:
@@ -87,9 +84,6 @@ ERROR: return type Float64 does not match inferred return type Union{Complex{Flo
 Stacktrace:
  [1] error(::String) at ./error.jl:33
  [2] top-level scope at REPL[8]:1
-
-julia> @constinferred sqrt(x)
-1.7320508075688772
 
 julia> @constinferred mysqrt(x)
 Test Failed at REPL[10]:1
