@@ -1,5 +1,5 @@
 module TimedTests
-export @timedtestset
+export @timedtestset, TimedTestSet
 
 import Test
 import Test: AbstractTestSet, DefaultTestSet, Broken, Fail, Error, Pass, TestSetException

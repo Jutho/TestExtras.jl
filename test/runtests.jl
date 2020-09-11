@@ -13,6 +13,4 @@ using Test
 
     x = 3.
     @constinferred mysqrt(x; complex = false)
-
-    # Write your tests here.
 end
