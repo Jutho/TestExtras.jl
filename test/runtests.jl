@@ -11,6 +11,10 @@ using Test
         @constinferred mysqrt($x)
     end
 
+    @constinferred Nothing iterate(1:5)
+    @constinferred Nothing iterate(1:-1)
+    @constinferred Tuple{Int,Int} iterate(1:-1)
+
     x = 3.
     @constinferred mysqrt(x; complex = false)
 end

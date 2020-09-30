@@ -7,6 +7,21 @@ module ConstInferred
     using Test
     using Test: Returned, Threw
 
+    @static if isdefined(Base, :typesplit)
+        const typesplit = Base.typesplit
+    else
+        Base.@pure function typesplit(@nospecialize(a), @nospecialize(b))
+            if a <: b
+                return Base.Bottom
+            end
+            if isa(a, Union)
+                return Union{typesplit(a.a, b),
+                             typesplit(a.b, b)}
+            end
+            return a
+        end
+    end
+
     _enabled = Ref(true)
     enable() = (_enabled[] = true; return nothing)
     disable() = (_enabled[] = false; return nothing)
@@ -124,7 +139,7 @@ module ConstInferred
                 if length($(esc(inftypes))) > 1
                     testresult = Threw(ArgumentError("more than one inferred type"), Base.catch_stack(), $(QuoteNode(src)))
                 else
-                    v = $(esc(rettype)) <: $(esc(allow)) || $(esc(rettype)) == Core.Compiler.typesubtract($(esc(inftypes))[1], $(esc(allow)))
+                    v = $(esc(rettype)) <: $(esc(allow)) || $(esc(rettype)) == typesplit($(esc(inftypes))[1], $(esc(allow)))
                     testresult = Returned(v, Expr(:call, :!=, $(esc(rettype)), $(esc(inftypes))[1]), $(QuoteNode(src)))
                 end
                 Test.do_test(testresult, $orig_ex)
