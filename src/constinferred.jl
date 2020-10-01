@@ -71,6 +71,9 @@ module ConstInferred
         if length(ex.args) > 1 && Meta.isexpr(ex.args[2], :parameters)
             kwargs = ex.args[2].args
             args = ex.args[3:end]
+        elseif length(ex.args) > 1 && Meta.isexpr(ex.args[2], :kw)
+            kwargs = ex.args[2:end]
+            args = Any[]
         else
             kwargs = Any[]
             args = ex.args[2:end]
