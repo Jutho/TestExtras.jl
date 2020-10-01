@@ -26,8 +26,6 @@ module ConstInferred
     enable() = (_enabled[] = true; return nothing)
     disable() = (_enabled[] = false; return nothing)
 
-    _args_and_call(args...; kwargs...) =
-        (args[1:end-1], kwargs, args[end](args[1:end-1]...; kwargs...))
     _materialize_broadcasted(f, args...) =
         Broadcast.materialize(Broadcast.broadcasted(f, args...))
 

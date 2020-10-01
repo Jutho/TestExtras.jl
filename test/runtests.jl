@@ -9,6 +9,7 @@ using Test
     @constinferred mysqrt(-3)
     for x = -1.5:0.5:+1.5
         @constinferred mysqrt($x)
+        @constinferred mysqrt($(rand() < 0 ? x : -x))
     end
 
     @constinferred Nothing iterate(1:5)
@@ -50,6 +51,7 @@ h25835(;x=1,y=1) = x isa Int ? x*y : (rand(Bool) ? 1.0 : 1)
 @timedtestset begin
     @test @constinferred(f25835()) == ()
     @test @constinferred(f25835(x=nothing)) == ()
+    @test @constinferred(f25835(x=$(rand() < 0 ? nothing : nothing))) == ()
     @test @constinferred(f25835(x=1)) == (1,)
 
     @test @constinferred(h25835()) == 1
