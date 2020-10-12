@@ -2,10 +2,9 @@ module TimedTests
 export @timedtestset, TimedTestSet
 
 import Test
-import Test: AbstractTestSet, DefaultTestSet, Broken, Fail, Error, Pass, TestSetException
+using Test: AbstractTestSet, DefaultTestSet, Broken, Fail, Error, Pass, TestSetException
 import Test: record, finish, print_test_errors, print_test_results, print_counts,
             get_testset, get_testset_depth,get_test_counts, get_alignment, filter_errors
-import Distributed: myid
 
 
 macro timedtestset(ex...)
@@ -44,7 +43,7 @@ record(ts::TimedTestSet, t::Pass) = (ts.n_passed += 1; t)
 # For the other result types, immediately print the error message
 # but do not terminate. Print a backtrace.
 function record(ts::TimedTestSet, t::Union{Fail, Error})
-    if myid() == 1
+    if Test.TESTSET_PRINT_ENABLE[]
         printstyled(ts.description, ": ", color=:white)
         # don't print for interrupted tests
         if !(t isa Error) || t.test_type !== :test_interrupted
@@ -70,9 +69,9 @@ record(ts::TimedTestSet, t::AbstractTestSet) = push!(ts.results, t)
 
 function print_test_errors(ts::TimedTestSet)
     for t in ts.results
-        if (isa(t, Error) || isa(t, Fail)) && myid() == 1
+        if isa(t, Error) || isa(t, Fail)
             println("Error in testset $(ts.description):")
-            Base.show(stdout,t)
+            show(t)
             println()
         elseif isa(t, TimedTestSet)
             print_test_errors(t)
@@ -130,8 +129,6 @@ function print_test_results(ts::TimedTestSet, depth_pad=0)
 end
 
 
-const TESTSET_PRINT_ENABLE = Ref(true)
-
 # Called at the end of a @testset, behaviour depends on whether
 # this is a child of another testset, or the "root" testset
 function finish(ts::TimedTestSet)
@@ -151,7 +148,7 @@ function finish(ts::TimedTestSet)
     total_broken = broken + c_broken
     total = total_pass + total_fail + total_error + total_broken
 
-    if TESTSET_PRINT_ENABLE[]
+    if Test.TESTSET_PRINT_ENABLE[]
         print_test_results(ts)
     end
 
@@ -159,7 +156,7 @@ function finish(ts::TimedTestSet)
     if total != total_pass + total_broken
         # Get all the error/failures and bring them along for the ride
         efs = filter_errors(ts)
-        throw(TestSetException(total_pass,total_fail,total_error, total_broken, efs))
+        throw(TestSetException(total_pass, total_fail, total_error, total_broken, efs))
     end
 
     # return the testset so it is returned from the @testset macro
