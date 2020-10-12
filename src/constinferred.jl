@@ -122,7 +122,7 @@ module ConstInferred
         fundefbody = Expr(:block, quoteargs..., isempty(kwargs) ?
                             Expr(:call, f, rightargs...) :
                             Expr(:call, f, Expr(:parameters, rightkwargs...), rightargs...))
-        fundefex = Expr(:quote, Expr(:(=), fundefhead, fundefbody))
+        fundefex = esc(Expr(:quote, Expr(:(=), fundefhead, fundefbody)))
 
         inftypes = gensym()
         rettype = gensym()
