@@ -1,5 +1,5 @@
 module ConstInferred
-    export @constinferred
+    export @constinferred, @constinferred_broken
 
     const ConstantValue = Union{Number,Char,QuoteNode}
 
@@ -47,12 +47,21 @@ module ConstInferred
     ```
     """
     macro constinferred(ex)
-        _constinferred(ex, __module__, __source__)
+        _constinferred(ex, __module__, __source__, Test.do_test)
     end
     macro constinferred(allow, ex)
-        _constinferred(ex, __module__, __source__, allow)
+        _constinferred(ex, __module__, __source__, Test.do_test, allow)
     end
-    function _constinferred(ex, mod, src, allow = :(Union{}))
+
+    macro constinferred_broken(ex)
+        _constinferred(ex, __module__, __source__, Test.do_broken_test)
+    end
+
+    macro constinferred_broken(allow, ex)
+        _constinferred(ex, __module__, __source__, Test.do_broken_test, allow)
+    end
+
+    function _constinferred(ex, mod, src, test_f, allow = :(Union{}))
         if Meta.isexpr(ex, :ref)
             ex = Expr(:call, :getindex, ex.args...)
         end
@@ -143,7 +152,8 @@ module ConstInferred
                     v = $(esc(rettype)) <: $(esc(allow)) || $(esc(rettype)) == typesplit($(esc(inftypes))[1], $(esc(allow)))
                     testresult = Returned(v, Expr(:call, :!=, $(esc(rettype)), $(esc(inftypes))[1]), $(QuoteNode(src)))
                 end
-                Test.do_test(testresult, $orig_ex)
+                
+                $test_f(testresult, $orig_ex)
             end
             $result
         end
