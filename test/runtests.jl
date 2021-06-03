@@ -26,6 +26,7 @@ using Test
 
     x = 3.
     @constinferred mysqrt(x; complex = false)
+    @constinferred_broken mysqrt(x; complex = true)
 end
 
 # ensure constinferred only evaluates argument once
