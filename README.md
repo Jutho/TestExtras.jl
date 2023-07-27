@@ -6,51 +6,42 @@
 This package adds useful additions to the functionality provided by `Test`, the Julia
 standard library for writing tests.
 
-The first addition is a new type of `TestSet`, namely `TimedTestSet`, which behaves
-identical to `Test.DefaultTestSet` except that it prints the total time it took to execute
-the test set, together with the number of passed, failed and broken tests. While this
-service should not be used as a finetuned performance regression detection mechanism, it
-can provide a first hint of possible regressions in case there is a significant discrepancy
-in the time of a testset in comparison to previous runs. There is a simple macro
-`@timedtestset` to facilitate using this testset. The name `TimedTestSet` is itself not
-exported, so one either does
-```julia
-using Test, TestExtras
-@timedtestset "some optional name" begin
-    ...
-end
-```
-or
-```julia
-using Test, TestExtras
-using TestExtras: TimedTestSet
-@testset TimedTestSet "some optional name" begin
-    ...
-end
-```
+# What's new in version 0.2
 
-The second macro exported by TestExtras.jl is `@constinferred`, which is a replacement of
+* The way in which `@constinferred` defines a new function has been changed so as to avoid
+  "method overwrite" warnings in Julia v1.10 and higher.
+* Since Julia v1.8, the default `Test.@testset` prints elapsed timings of tests, thereby
+  replicating the behaviour of `@timedtestset` and making the latter superfluous. However,
+  `@timedtestset` and its associated test set type `TimedTestSet` remains available in
+  TestExtras.jl in order to support older Julia versions. It is now a literal copy of the
+  `DefaultTestSet` implementation as in the `Test` standard library of Julia 1.8 and thus
+  also supports the `verbose` keyword.
+
+# Short description of the package
+
+The first feature of TestExtras.jl is  a macro `@constinferred`, which is a replacement of
 `Test.@inferred` but with two major differences.
 
 1.  Unlike `Test.@inferred`, the comparison between the actual and inferred runtype is a
     proper test which contributes to the total number of passed or failed tests.
 
 2.  Unlike `Test.@inferred`, `@constinferred` will test whether the return value of a
-    function call can be inferred in combination with constant propagation. For
-    `@inferred`, both `@inferred f(3, ...)` and `x=3; @inferred f(x, ...)` will yield the
-    same result, based on probing `Base.return_types(f,(Int,...))`. In contrast
-    `@constinferred f(3,...)` will wrap the function call in a new function in which the
-    value `3` is hard-coded, and test whether the return type of this wrapper function can
-    be inferred, so as to let constant propagation do its work. This is true for all
-    arguments (positional and keyword) whose value is a literal constants of type
-    `Integer`, `Char` or `Symbol`. Generic arguments will instead also be arguments to the
-    wrapper function and will thus not trigger constant propagation. However, sometimes it
-    is useful to test for successful constant propagation of a certain variable, even
-    though you want to keep it as a symbol in the test, for example because you want to
-    loop over possible values. In that case, you can interpolate the value into the
-    `@constinferred` expression.
+    function call can be inferred in combination with constant propagation. For `@inferred`,
+    both `@inferred f(3, ...)` and `x=3; @inferred f(x, ...)` will yield the same result,
+    based on probing `Base.return_types(f,(Int,...))`. In contrast `@constinferred f(3,...)`
+    will wrap the function call in a new function in which the value `3` is hard-coded, and
+    test whether the return type of this wrapper function can be inferred, so as to let
+    constant propagation do its work. This is true for all arguments (positional and
+    keyword) whose value is a literal constants of type `Integer`, `Char` or `Symbol`.
+    Generic arguments will instead also be arguments to the wrapper function and will thus
+    not trigger constant propagation. However, sometimes it is useful to test for successful
+    constant propagation of a certain variable, even though you want to keep it as a symbol
+    in the test, for example because you want to loop over possible values. In that case,
+    you can interpolate the value into the `@constinferred` expression.
 
-Some example is probably more insightful. We define a new function `mysqrt` that is type-unstable with respect to real values of the argument `x`, at least if the keyword argument `complex = true`.
+Some example is probably more insightful. We define a new function `mysqrt` that is
+type-unstable with respect to real values of the argument `x`, at least if the keyword
+argument `complex = true`.
 
 ```julia
 julia> using Test, TestExtras
@@ -106,7 +97,32 @@ julia> @constinferred mysqrt(x; complex = false)
 Note, firstly, that the case where `@constinferred` detects that the return type cannot be
 inferred for a general argument of type `Float64`, it reports the error as an actual test
 failure rather than a generic error. Secondly, note that while the `@constinferred` macro
-seems to work for all versions of Julia from version 1 onwards, the result can depend on
-the specific Julia version, as changes in the compiler affect constant propagation. In
-particular, the constant propagation for the keyword argument in the last test only leads
-to an inferred return type on Julia 1.5 (and beyond?).
+seems to work for all versions of Julia from version 1 onwards, the result can depend on the
+specific Julia version, as changes in the compiler affect constant propagation. In
+particular, the constant propagation for the keyword argument in the last test only leads to
+an inferred return type on Julia 1.5 (and beyond?).
+
+The second feature of TestExtras.jl is a new type of `TestSet`, namely `TimedTestSet`, which
+is essentially a backport of the the `Test.DefaultTestSet` of Julia v1.8 (but it dates back
+to before it existed in the `Test` standard library). In particular, the difference with the
+`Test.DefaultTestSet` on older Julia versions is that it also prints the total time it took
+to execute the test set, together with the number of passed, failed and broken tests. While
+this service should not be used as a finetuned performance regression detection mechanism,
+it can provide a first hint of possible regressions in case there is a significant
+discrepancy in the time of a testset in comparison to previous runs. There is a simple macro
+`@timedtestset` to facilitate using this testset. The name `TimedTestSet` is itself not
+exported, so one either does
+```julia
+using Test, TestExtras
+@timedtestset "some optional name" begin
+    ...
+end
+```
+or
+```julia
+using Test, TestExtras
+using TestExtras: TimedTestSet
+@testset TimedTestSet "some optional name" begin
+    ...
+end
+```
