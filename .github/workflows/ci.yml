@@ -10,8 +10,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.0'
-          - '1.6'
+          - '1.5' # lowest version that supports constant propagation
+          - '1.6' # long-term stable release
           - '1'
         os:
           - ubuntu-latest
