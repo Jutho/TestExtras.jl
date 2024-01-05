@@ -5,7 +5,7 @@ using Test: Test
 using Test: AbstractTestSet, DefaultTestSet, Broken, Fail, Error, Pass, TestSetException
 using Test: record, finish, print_test_errors, print_test_results, print_counts,
             get_testset, get_testset_depth, get_test_counts, get_alignment, filter_errors,
-            TESTSET_PRINT_ENABLE
+            scrub_backtrace, TESTSET_PRINT_ENABLE
 
 macro timedtestset(ex...)
     timedtestsetvar = gensym()

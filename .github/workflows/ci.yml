@@ -12,6 +12,7 @@ jobs:
         version:
           - '1.5' # lowest version that supports constant propagation
           - '1.6' # long-term stable release
+          - '1.8' # first version where we swhich to simply aliasing Test.@testset
           - '1'
         os:
           - ubuntu-latest

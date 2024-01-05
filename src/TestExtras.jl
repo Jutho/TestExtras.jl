@@ -5,7 +5,11 @@ export @timedtestset
 export ConstInferred
 
 include("constinferred.jl")
-include("timedtest.jl")
+if VERSION >= v"1.8"
+    include("timedtest_new.jl")
+else
+    include("timedtest.jl")
+end
 
 using .ConstInferred: @constinferred, @constinferred_broken
 using .TimedTests: @timedtestset
