@@ -31,6 +31,8 @@ using Test
     x = 3.0
     @constinferred mysqrt(x; complex=false)
     @constinferred_broken mysqrt(x; complex=true)
+    complex = false
+    @constinferred_broken mysqrt(x; complex)
 end
 
 # ensure constinferred only evaluates argument once

@@ -115,8 +115,15 @@ function _constinferred(ex, mod, src, test_f, allow=:(Union{}))
         end
     end
     for x in kwargs
-        xkey = x.args[1]
-        xval = x.args[2]
+        if x isa Expr && x.head == :kw
+            xkey = x.args[1]
+            xval = x.args[2]
+        elseif x isa Symbol
+            xkey = x
+            xval = x
+        else
+            return Expr(:call, :error, "syntax: invalid keyword argument syntax \"$x\" at $src")
+        end
         if xval isa ConstantValue
             push!(rightkwargs, x)
         elseif Meta.isexpr(xval, :$)
