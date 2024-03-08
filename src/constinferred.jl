@@ -122,7 +122,8 @@ function _constinferred(ex, mod, src, test_f, allow=:(Union{}))
             xkey = x
             xval = x
         else
-            return Expr(:call, :error, "syntax: invalid keyword argument syntax \"$x\" at $src")
+            return Expr(:call, :error,
+                        "syntax: invalid keyword argument syntax \"$x\" at $src")
         end
         if xval isa ConstantValue
             push!(rightkwargs, x)

@@ -118,7 +118,11 @@ end
                                   5678
                               end)
     let a
-        @test_throws UndefVarError(:a) a
+        @static if VERSION >= v"1.11-DEV"
+            @test_throws UndefVarError(:a, :local) a
+        else
+            @test_throws UndefVarError(:a) a
+        end
         @test_nowarn a = 1
         @test a === 1
     end
