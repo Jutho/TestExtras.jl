@@ -127,3 +127,8 @@ end
         @test a === 1
     end
 end
+const constval = false
+@timedtestset "@include" begin
+    val = true
+    @include("testinclude.jl")
+end

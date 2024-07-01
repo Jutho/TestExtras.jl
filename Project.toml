@@ -1,7 +1,7 @@
 name = "TestExtras"
 uuid = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
 authors = ["Jutho Haegeman <jutho.haegeman@ugent.be> and contributors"]
-version = "0.2.2"
+version = "0.3"
 
 [deps]
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
