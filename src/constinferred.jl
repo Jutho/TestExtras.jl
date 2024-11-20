@@ -41,7 +41,7 @@ testing type stability of a new function, where all arguments or keyword argumen
 the original function `f` that have a constant value (in the call expression) of type
 `Union{Number,Char,Symbol}` are hard coded.
 
-If you want to test for constant propagation in a variable which is not hard-coded in 
+If you want to test for constant propagation in a variable which is not hard-coded in
 the call expression, you can interpolate it into the expression.
 
 Secondly, @constinferred returns the value if type inference succeeds, like `@inferred`,
@@ -175,9 +175,11 @@ function _constinferred(ex, mod, src, test_f, allow=:(Union{}))
         end
         $result
     end
+    latestworld = isdefined(Core, :var"@latestworld") ? :(@Core.latestworld) : nothing
     finalex = Base.remove_linenums!(quote
                                         $pre
                                         Core.eval($mod, $fundefex)
+                                        $latestworld
                                         let
                                             $main
                                             $post
