@@ -64,6 +64,55 @@ h25835(; x=1, y=1) = x isa Int ? x * y : (rand(Bool) ? 1.0 : 1)
     @test @constinferred(Union{Float64,Int64}, h25835(x=1.0, y=1.0)) == 1
 end
 
+# @testinferred
+# -------------
+# testset to record failed tests without actually making them fail
+mutable struct NoThrowTestSet <: Test.AbstractTestSet
+    results::Vector
+    NoThrowTestSet(desc) = new([])
+end
+Test.record(ts::NoThrowTestSet, t::Test.Result) = (push!(ts.results, t); t)
+Test.finish(ts::NoThrowTestSet) = ts.results
+
+struct SillyArray <: AbstractArray{Float64, 1} end
+Base.getindex(::SillyArray, i) = rand() > 0.5 ? 0 : false
+
+uninferrable_function(i) = (1, "1")[i]
+uninferrable_small_union(i) = (1, nothing)[i]
+
+inferrable_kwtest(x; y = 1) = 2x
+uninferrable_kwtest(x; y = 1) = 2x + y
+
+@timedtestset "testinferred" begin
+    # function only ran once
+    global inferred_test_global = 0
+    @testinferred inferred_test_function()
+    @test inferred_test_global == 1
+
+    @test (@testinferred (1:3)[2]) == 2
+
+    @testinferred Nothing uninferrable_small_union(1)
+    @testinferred Nothing uninferrable_small_union(2)
+
+    @test (@testinferred inferrable_kwtest(1)) == 2
+    @test (@testinferred inferrable_kwtest(1; y = 1)) == 2
+    @test (@testinferred uninferrable_kwtest(1)) == 3
+    @test (@testinferred uninferrable_kwtest(1; y = 2)) == 4
+
+    @test_throws ArgumentError (@testinferred(nothing, uninferrable_small_union(1)))
+end
+
+let fails = @testset NoThrowTestSet begin
+        @testinferred SillyArray()[2]
+        @testinferred uninferrable_function(1)
+        @testinferred uninferrable_small_union(1)
+        @testinferred Missing uninferrable_small_union(1)
+    end
+    for fail in fails
+        @test fail isa Test.Fail
+    end
+end
+
 @timedtestset "@test" begin
     @test true
     @test 1 == 1
