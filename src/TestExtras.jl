@@ -6,6 +6,7 @@ export @include
 export @testinferred
 export ConstInferred
 
+include("utilities.jl")
 include("constinferred.jl")
 include("testinferred.jl")
 include("includemacro.jl")

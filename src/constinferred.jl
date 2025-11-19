@@ -3,32 +3,16 @@ export @constinferred, @constinferred_broken
 
 const ConstantValue = Union{Number,Char,QuoteNode}
 
-using InteractiveUtils: gen_call_with_extracted_types
 using Test
 using Test: Returned, Threw
 
-@static if isdefined(Base, :typesplit)
-    const typesplit = Base.typesplit
-else
-    Base.@pure function typesplit(@nospecialize(a), @nospecialize(b))
-        if a <: b
-            return Base.Bottom
-        end
-        if isa(a, Union)
-            return Union{typesplit(a.a, b),
-                         typesplit(a.b, b)}
-        end
-        return a
-    end
-end
+using ..Utilities: typesplit, materialize_broadcasted
+
 
 _enabled = Ref(true)
 enable() = (_enabled[] = true; return nothing)
 disable() = (_enabled[] = false; return nothing)
 
-function _materialize_broadcasted(f, args...)
-    return Broadcast.materialize(Broadcast.broadcasted(f, args...))
-end
 
 """
     @constinferred [AllowedType] f(x)
@@ -72,7 +56,7 @@ function _constinferred(ex, mod, src, test_f, allow=:(Union{}))
     farg = ex.args[1]
     if isa(farg, Symbol) && first(string(farg)) == '.'
         farg = Symbol(string(farg)[2:end])
-        ex = Expr(:call, GlobalRef(Test, :_materialize_broadcasted),
+        ex = Expr(:call, GlobalRef(@__MODULE__, :materialize_broadcasted),
                   farg, ex.args[2:end]...)
     end
     pre = quote
