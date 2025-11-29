@@ -2,7 +2,7 @@ using TestExtras
 using Test
 
 @timedtestset "constinferred tests" begin
-    function mysqrt(x; complex=true)
+    function mysqrt(x; complex::Bool=true)
         return x >= 0 ? sqrt(x) :
                (complex ? im * sqrt(-x) :
                 throw(DomainError(x,
@@ -10,14 +10,30 @@ using Test
     end
 
     @constinferred mysqrt(+3)
-    @constinferred mysqrt(-3)
+    @testinferred mysqrt(-3) constprop = true
+    @testinferred mysqrt(-3) constprop = false broken = true
+    brokenval = true
+    @testinferred mysqrt(-3) constprop = false broken = brokenval
+    @testinferred mysqrt(-3) constprop = false broken = VERSION > v"1"
     for x in -1.5:0.5:+1.5
         @constinferred mysqrt($x)
-        @constinferred mysqrt($(rand() < 0 ? x : -x))
+        @testinferred mysqrt($(rand() < 0 ? x : -x)) constprop = true
     end
 
+    constprop = false
+    errortype = @static if VERSION < v"1.7"
+        LoadError
+    else
+        ErrorException
+    end
+    @test_throws errortype @macroexpand(@testinferred mysqrt(-3) constprop = constprop)
+    @test_throws errortype @macroexpand(@constinferred mysqrt(-3) constprop = false broken = true x = 6)
+    @test_throws errortype @macroexpand(@testinferred mysqrt(-3) constprop = VERSION > v"1")
+    @test_throws errortype @macroexpand(@testinferred mysqrt(-3) this_is_not_a_keyword = true)
+    @test_throws errortype @macroexpand(@testinferred mysqrt(-3) this_is_not_valid)
+
     @constinferred Nothing iterate(1:5)
-    @constinferred Nothing iterate(1:-1)
+    @testinferred Nothing iterate(1:-1) constprop = true
     @constinferred Tuple{Int,Int} iterate(1:-1)
 
     x = (2, 3)
@@ -33,6 +49,11 @@ using Test
     @constinferred_broken mysqrt(x; complex=true)
     complex = false
     @constinferred_broken mysqrt(x; complex)
+    @constinferred_broken mysqrt(x; complex = complex)
+    @constinferred_broken mysqrt(x; complex = VERSION < v"1")
+    @constinferred mysqrt(x; complex) broken = true
+    @testinferred mysqrt(x; complex) broken = true
+    @testinferred mysqrt(x) broken = true
 end
 
 # ensure constinferred only evaluates argument once
@@ -62,6 +83,55 @@ h25835(; x=1, y=1) = x isa Int ? x * y : (rand(Bool) ? 1.0 : 1)
     @test @constinferred(h25835()) == 1
     @test @constinferred(h25835(x=2, y=3)) == 6
     @test @constinferred(Union{Float64,Int64}, h25835(x=1.0, y=1.0)) == 1
+end
+
+# @testinferred
+# -------------
+# testset to record failed tests without actually making them fail
+mutable struct NoThrowTestSet <: Test.AbstractTestSet
+    results::Vector
+    NoThrowTestSet(desc) = new([])
+end
+Test.record(ts::NoThrowTestSet, t::Test.Result) = (push!(ts.results, t); t)
+Test.finish(ts::NoThrowTestSet) = ts.results
+
+struct SillyArray <: AbstractArray{Float64, 1} end
+Base.getindex(::SillyArray, i) = rand() > 0.5 ? 0 : false
+
+uninferrable_function(i) = (1, "1")[i]
+uninferrable_small_union(i) = (1, nothing)[i]
+
+inferrable_kwtest(x; y = 1) = 2x
+uninferrable_kwtest(x; y = 1) = 2x + y
+
+@timedtestset "testinferred" begin
+    # function only ran once
+    global inferred_test_global = 0
+    @testinferred inferred_test_function()
+    @test inferred_test_global == 1
+
+    @test (@testinferred (1:3)[2]) == 2
+
+    @testinferred Nothing uninferrable_small_union(1)
+    @testinferred Nothing uninferrable_small_union(2)
+
+    @test (@testinferred inferrable_kwtest(1)) == 2
+    @test (@testinferred inferrable_kwtest(1; y = 1)) == 2
+    @test (@testinferred uninferrable_kwtest(1)) == 3
+    @test (@testinferred uninferrable_kwtest(1; y = 2)) == 4
+
+    @test_throws ArgumentError (@testinferred(nothing, uninferrable_small_union(1)))
+end
+
+let fails = @testset NoThrowTestSet begin
+        @testinferred SillyArray()[2]
+        @testinferred uninferrable_function(1)
+        @testinferred uninferrable_small_union(1)
+        @testinferred Missing uninferrable_small_union(1)
+    end
+    for fail in fails
+        @test fail isa Test.Fail
+    end
 end
 
 @timedtestset "@test" begin
