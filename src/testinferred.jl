@@ -400,9 +400,9 @@ function make_callexpr(f, args, kwargs, mod)
             error("syntax: invalid keyword argument syntax \"$x\" at $src")
         end
         if xval isa ConstantValue
-            push!(callkwargs, x)
+            push!(callkwargs, Expr(:kw, xkey, xval))
         elseif x isa Symbol
-            push!(callkwargs, esc(x))
+            push!(callkwargs, Expr(:kw, xkey, esc(xval)))
         elseif Meta.isexpr(xval, :$)
             error("value interpolation with `\$` is not supported in @constinferred without constant propagation")
         else
