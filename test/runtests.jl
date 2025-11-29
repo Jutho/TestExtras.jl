@@ -21,11 +21,16 @@ using Test
     end
 
     constprop = false
-    @test_throws ErrorException @macroexpand(@testinferred mysqrt(-3) constprop = constprop)
-    @test_throws ErrorException @macroexpand(@constinferred mysqrt(-3) constprop = false broken = true x = 6)
-    @test_throws ErrorException @macroexpand(@testinferred mysqrt(-3) constprop = VERSION > v"1")
-    @test_throws ErrorException @macroexpand(@testinferred mysqrt(-3) this_is_not_a_keyword = true)
-    @test_throws ErrorException @macroexpand(@testinferred mysqrt(-3) this_is_not_valid)
+    errortype = @static if VERSION < v"1.7"
+        LoadError
+    else
+        ErrorException
+    end
+    @test_throws errortype @macroexpand(@testinferred mysqrt(-3) constprop = constprop)
+    @test_throws errortype @macroexpand(@constinferred mysqrt(-3) constprop = false broken = true x = 6)
+    @test_throws errortype @macroexpand(@testinferred mysqrt(-3) constprop = VERSION > v"1")
+    @test_throws errortype @macroexpand(@testinferred mysqrt(-3) this_is_not_a_keyword = true)
+    @test_throws errortype @macroexpand(@testinferred mysqrt(-3) this_is_not_valid)
 
     @constinferred Nothing iterate(1:5)
     @testinferred Nothing iterate(1:-1) constprop = true
