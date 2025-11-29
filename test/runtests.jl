@@ -2,7 +2,7 @@ using TestExtras
 using Test
 
 @timedtestset "constinferred tests" begin
-    function mysqrt(x; complex=true)
+    function mysqrt(x; complex::Bool=true)
         return x >= 0 ? sqrt(x) :
                (complex ? im * sqrt(-x) :
                 throw(DomainError(x,
@@ -47,7 +47,7 @@ using Test
     @constinferred_broken mysqrt(x; complex = complex)
     @constinferred_broken mysqrt(x; complex = VERSION < v"1")
     @constinferred mysqrt(x; complex) broken = true
-    @testinferred mysqrt(x; complex) broken = false
+    @testinferred mysqrt(x; complex) broken = true
     @testinferred mysqrt(x) broken = true
 end
 
