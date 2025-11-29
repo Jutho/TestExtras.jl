@@ -6,21 +6,16 @@
 This package adds useful additions to the functionality provided by `Test`, the Julia
 standard library for writing tests.
 
-# What's new in version 0.2
+# What's new in version 0.3.3
 
-* The way in which `@constinferred` defines a new function has been changed so as to avoid
-  "method overwrite" warnings in Julia v1.10 and higher.
-* Since Julia v1.8, the default `Test.@testset` prints elapsed timings of tests, thereby
-  replicating the behaviour of `@timedtestset` and making the latter superfluous. However,
-  `@timedtestset` and its associated test set type `TimedTestSet` remains available in
-  TestExtras.jl in order to support older Julia versions. It is now a literal copy of the
-  `DefaultTestSet` implementation as in the `Test` standard library of Julia 1.8 and thus
-  also supports the `verbose` keyword.
+* Introduction of a `@testinferred` macro, that unlike `@constinferred` can be used inside
+  functions, but does not apply constant propagation. However, unlike `Test.@inferred`, it
+  does contribute to the test results.
 
 # Short description of the package
 
-The first feature of TestExtras.jl is  a macro `@constinferred`, which is a replacement of
-`Test.@inferred` but with two major differences.
+The first feature of TestExtras.jl are the macros `@testinferred` and `@constinferred`, 
+which are a replacement of `Test.@inferred` but with two major differences.
 
 1.  Unlike `Test.@inferred`, the comparison between the actual and inferred runtype is a
     proper test which contributes to the total number of passed or failed tests.
@@ -38,6 +33,12 @@ The first feature of TestExtras.jl is  a macro `@constinferred`, which is a repl
     constant propagation of a certain variable, even though you want to keep it as a symbol
     in the test, for example because you want to loop over possible values. In that case,
     you can interpolate the value into the `@constinferred` expression.
+
+    However, because this macro works by defining a new function, it cannot be used inside
+    other functions. Therefore, `@testinferred` is provided as a variant that works inside
+    functions, but without constant propagation. In fact, `@constinferred f(args...)` is
+    equivalent to `@testinferred f(args...) constprop=true`, where the optional keyword argument
+    `constprop` (default `false`) controls whether constant propagation is applied.
 
 Some example is probably more insightful. We define a new function `mysqrt` that is
 type-unstable with respect to real values of the argument `x`, at least if the keyword
