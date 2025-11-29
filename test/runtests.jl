@@ -10,14 +10,25 @@ using Test
     end
 
     @constinferred mysqrt(+3)
-    @constinferred mysqrt(-3)
+    @testinferred mysqrt(-3) constprop = true
+    @testinferred mysqrt(-3) constprop = false broken = true
+    brokenval = true
+    @testinferred mysqrt(-3) constprop = false broken = brokenval
+    @testinferred mysqrt(-3) constprop = false broken = VERSION > v"1"
     for x in -1.5:0.5:+1.5
         @constinferred mysqrt($x)
-        @constinferred mysqrt($(rand() < 0 ? x : -x))
+        @testinferred mysqrt($(rand() < 0 ? x : -x)) constprop = true
     end
 
+    constprop = false
+    @test_throws ErrorException @macroexpand(@testinferred mysqrt(-3) constprop = constprop)
+    @test_throws ErrorException @macroexpand(@constinferred mysqrt(-3) constprop = false broken = true x = 6)
+    @test_throws ErrorException @macroexpand(@testinferred mysqrt(-3) constprop = VERSION > v"1")
+    @test_throws ErrorException @macroexpand(@testinferred mysqrt(-3) this_is_not_a_keyword = true)
+    @test_throws ErrorException @macroexpand(@testinferred mysqrt(-3) this_is_not_valid)
+
     @constinferred Nothing iterate(1:5)
-    @constinferred Nothing iterate(1:-1)
+    @testinferred Nothing iterate(1:-1) constprop = true
     @constinferred Tuple{Int,Int} iterate(1:-1)
 
     x = (2, 3)
@@ -33,6 +44,11 @@ using Test
     @constinferred_broken mysqrt(x; complex=true)
     complex = false
     @constinferred_broken mysqrt(x; complex)
+    @constinferred_broken mysqrt(x; complex = complex)
+    @constinferred_broken mysqrt(x; complex = VERSION < v"1")
+    @constinferred mysqrt(x; complex) broken = true
+    @testinferred mysqrt(x; complex) broken = false
+    @testinferred mysqrt(x) broken = true
 end
 
 # ensure constinferred only evaluates argument once
