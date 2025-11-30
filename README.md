@@ -6,7 +6,7 @@
 This package adds useful additions to the functionality provided by `Test`, the Julia
 standard library for writing tests.
 
-# What's new in version 0.3.3
+# What's new in version 0.3.2
 
 * Introduction of a `@testinferred` macro, that unlike `@constinferred` can be used inside
   functions, but does not apply constant propagation. However, unlike `Test.@inferred`, it
