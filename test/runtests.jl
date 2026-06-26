@@ -47,6 +47,8 @@ using Test
     x = 3.0
     @constinferred mysqrt(x; complex=false)
     @constinferred_broken mysqrt(x; complex=true)
+    return_type_object() = Float64
+    @test @constinferred(return_type_object()) === Float64
     complex = false
     @constinferred_broken mysqrt(x; complex)
     @constinferred_broken mysqrt(x; complex = complex)
