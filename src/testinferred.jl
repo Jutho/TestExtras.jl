@@ -255,6 +255,7 @@ function _testinferred(ex, orig_ex, mod, src, allow = :(Union{}); constprop = fa
     end
 
     inftype = esc(gensym())
+    infsplit = esc(gensym())
     rettype = esc(gensym())
     result = esc(gensym())
     main = quote
@@ -271,9 +272,11 @@ function _testinferred(ex, orig_ex, mod, src, allow = :(Union{}); constprop = fa
                     @__MODULE__
                 )
             )
-            $rettype = $result isa Type ? Type{$result} : typeof($result)
+            $rettype = Core.Typeof($result)
+            $infsplit = typesplit($inftype, $(esc(allow)))
             v = $rettype <: $(esc(allow)) ||
-                $rettype == typesplit($inftype, $(esc(allow)))
+                $rettype == $infsplit ||
+                ($result isa Type && Type{$result} == $infsplit)
             testresult = Returned(
                 v, Expr(:call, :!=, $rettype, $inftype),
                 $(QuoteNode(src))
